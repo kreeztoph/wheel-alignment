@@ -128,6 +128,10 @@ if st.button('Process Data'):
                     # Filter carriers greater than 667
                     dataset = dataset[dataset['Carrier'] <= 667]
                     dataset = dataset[dataset['Carrier'] != 0]
+                    dataset = dataset[dataset['R30_Distance'] != -1]
+                    dataset = dataset[dataset['R31_Distance'] != -1]
+                    dataset = dataset[dataset['R32_Diameter_LEFT'] != -1]
+                    dataset = dataset[dataset['R33_Diameter_RIGHT'] != -1]
                     dataset['R32_R33_Diameter_AVG'] = (dataset['R32_Diameter_LEFT'] + dataset['R33_Diameter_RIGHT'])/2
                     # Assuming your original DataFrame is named 'df'
                     columns_to_average = [
