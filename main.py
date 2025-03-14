@@ -3,6 +3,7 @@ import pandas as pd
 import tempfile 
 import plotly.express as px
 import uuid
+import plotly.graph_objects as go
 
 # Reusable function for Plotly charts with unique IDs
 def plot_interactive_line_chart(data, x_column, y_columns, title, x_label, y_label, legend_title):
@@ -71,6 +72,7 @@ def split_and_sort_timestamp(df, timestamp_col):
     df = df.sort_values(by=['Date', 'Time']).reset_index(drop=True)
 
     return df
+
 
 def process_measurements(file):
     # Read the input file into a DataFrame
@@ -148,48 +150,81 @@ if st.button('Process Data'):
                         
                         
                     with tab_2:
-                        # Plot the first graph
-                        plot_interactive_line_chart(
-                            data=ploter,
-                            x_column="Carrier",
-                            y_columns=["R30_Distance"],
-                            title="Interactive Line Chart: Carrier vs. R30_Distance",
-                            x_label="Carrier",
-                            y_label="Distance",
-                            legend_title="Measurements"
+                        # Create the Plotly figure
+                        fig = go.Figure()
+                        x = ploter['Carrier']
+
+                        # Add each line with an offset for visibility while keeping actual values in hover
+                        fig.add_trace(go.Scatter(
+                            x=x, 
+                            y=ploter["R30_Distance"] + 6,  
+                            mode='lines', 
+                            name='R30_Distance',
+                            customdata=ploter['R30_Distance'],  
+                            hoverinfo='skip',  # Remove default hover info
+                            hovertemplate='R30_Distance<br>y: %{customdata:.3f}<extra></extra>'
+                        ))
+
+                        fig.add_trace(go.Scatter(
+                            x=x, 
+                            y=ploter["R32_R33_Diameter_AVG"] + 4,  
+                            mode='lines', 
+                            name='R32_R33_Diameter_AVG',
+                            customdata=ploter["R32_R33_Diameter_AVG"], 
+                            hoverinfo='skip',  # Remove default hover info
+                            hovertemplate='R32_R33_Diameter_AVG<br>y: %{customdata:.3f}<extra></extra>'
+                        ))
+
+                        fig.add_trace(go.Scatter(
+                            x=x, 
+                            y=ploter['R32_Diameter_LEFT'] + 2,  
+                            mode='lines', 
+                            name='R32_Diameter_LEFT',
+                            customdata=ploter['R32_Diameter_LEFT'],  
+                            hoverinfo='skip',  # Remove default hover info
+                            hovertemplate='R32_Diameter_LEFT<br>y: %{customdata:.3f}<extra></extra>'
+                        ))
+
+                        fig.add_trace(go.Scatter(
+                            x=x, 
+                            y=ploter['R33_Diameter_RIGHT'],  
+                            mode='lines', 
+                            name='R33_Diameter_RIGHT',
+                            customdata=ploter['R33_Diameter_RIGHT'],  
+                            hoverinfo='skip',  # Remove default hover info
+                            hovertemplate='R33_Diameter_RIGHT<br>y: %{customdata:.3f}<extra></extra>'
+                        ))
+
+                        # Customize layout
+                        fig.update_layout(
+                            title='Stacked Line Charts with Correct Hover Values',
+                            xaxis_title='Carrier',
+                            yaxis_title='Value',
+                            showlegend=True,
+                            hovermode='x unified',  # Enables hover sync
+                            height=600,
+                            template='plotly_dark',  
+                            xaxis=dict(
+                                range=[min(ploter['Carrier']), max(ploter['Carrier'])],  # Start x-axis from the first Carrier value
+                            ),
+                            hoverlabel=dict(
+                                font=dict(
+                                    size=18,  # Increase hover font size
+                                    family="Arial"
+                                )
+                            ),
+                            legend=dict(
+                                orientation="h",  # Horizontal legend
+                                yanchor="top",
+                                y=-0.2,  # Moves legend below the graph
+                                xanchor="center",
+                                x=0.5  # Centers the legend
+                            ),
+                            shapes=[]  # Remove unnecessary slanted dotted lines
                         )
 
-                        # Plot the second graph
-                        plot_interactive_line_chart(
-                            data=ploter,
-                            x_column="Carrier",
-                            y_columns=["R32_R33_Diameter_AVG"],
-                            title="Interactive Line Chart: Carrier vs. R32_R33_Diameter_AVG",
-                            x_label="Carrier",
-                            y_label="Value",
-                            legend_title="Metrics"
-                        )
-                        # Plot the third graph
-                        plot_interactive_line_chart(
-                            data=ploter,
-                            x_column="Carrier",
-                            y_columns=["R32_Diameter_LEFT"],
-                            title="Interactive Line Chart: Carrier vs. R32_Diameter_LEFT",
-                            x_label="Carrier",
-                            y_label="Value",
-                            legend_title="Metrics"
-                        )
-                        # Plot the fourth graph
-                        plot_interactive_line_chart(
-                            data=ploter,
-                            x_column="Carrier",
-                            y_columns=["R33_Diameter_RIGHT"],
-                            title="Interactive Line Chart: Carrier vs. R33_Diameter_RIGHT",
-                            x_label="Carrier",
-                            y_label="Value",
-                            legend_title="Metrics"
-                        )
-                        
+                        # Display the plot in Streamlit
+                        st.plotly_chart(fig)
 
             except Exception as e:
                     st.error(f"An error occurred: {e}")
